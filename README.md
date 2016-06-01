@@ -5,6 +5,8 @@ by Tim Henderson (tadh@case.edu)
 Copyright 2016, Licensed under the GPL version 3. Please reach out to me
 directly if you require another licensing option. I am willing to work with you.
 
+[![GoDoc](https://godoc.org/github.com/timtadh/combos?status.svg)](https://godoc.org/github.com/timtadh/combos)
+
 ## Why?
 
 Because I can. I have written a lot of recursive descent parsers over the years.
