@@ -95,9 +95,9 @@ func (g *Grammar) Parse(s *lex.Scanner, parserCtx interface{}) (*Node, *ParseErr
 	} else if p.LastError != nil {
 		return nil, p.LastError
 	} else if serr != nil {
-		return nil, Error("Unconsumed Input", nil).Chain(err)
+		return nil, Unconsumed(s)
 	} else {
-		return nil, Error("Unconsumed Input", t.(*lex.Token))
+		return nil, ErrorOn("Unconsumed Input", t.(*lex.Token))
 	}
 }
 
@@ -128,13 +128,14 @@ func (g *Grammar) Effect(consumers ...Consumer) func(do func(interface{}, ...*No
 			if doerr != nil {
 				p.S.TC = tc
 				t, _, _ := p.S.Next()
+				p.S.TC = tc
 				if t == nil {
-					err := Error("Side Effect Error", nil).Chain(doerr)
+					err := Error(p.S, "Side Effect Error").Chain(doerr)
 					p.UserError = err
 					return nil, err
 				}
 				tok := t.(*lex.Token)
-				err := Error("Side Effect Error", tok).Chain(doerr)
+				err := ErrorOn("Side Effect Error", tok).Chain(doerr)
 				p.UserError = err
 				return nil, err
 			}
@@ -252,19 +253,18 @@ func (g *Grammar) Consume(token string) Consumer {
 		t, err, eof := p.S.Next()
 		if eof {
 			p.S.TC = tc
-			return nil, Error(
-				fmt.Sprintf("Ran off the end of the input. expected '%v''", token), nil)
+			return nil, EOS(p.S, token)
 		}
 		if err != nil {
 			p.S.TC = tc
-			return nil, Error("Lexer Error", nil).Chain(err)
+			return nil, Error(p.S, "Lexer Error").Chain(err)
 		}
 		tk := t.(*lex.Token)
 		if tk.Type == g.TokenIds[token] {
 			return NewTokenNode(g, tk), nil
 		}
 		p.S.TC = tc
-		return nil, Error(fmt.Sprintf("Expected %v", token), tk)
+		return nil, ErrorOn(fmt.Sprintf("Expected %v", token), tk)
 	})
 }
 
@@ -274,11 +274,10 @@ func (g *Grammar) Peek(tokens ...string) Consumer {
 		t, err, eof := p.S.Next()
 		p.S.TC = tc
 		if eof {
-			return nil, Error(
-				fmt.Sprintf("Ran off the end of the input. expected '%v''", tokens), nil)
+			return nil, EOS(p.S, tokens)
 		}
 		if err != nil {
-			return nil, Error("Lexer Error", nil).Chain(err)
+			return nil, Error(p.S, "Lexer Error").Chain(err)
 		}
 		tk := t.(*lex.Token)
 		for _, token := range tokens {
@@ -286,6 +285,6 @@ func (g *Grammar) Peek(tokens ...string) Consumer {
 				return nil, nil
 			}
 		}
-		return nil, Error(fmt.Sprintf("Expected one of %v", tokens), tk)
+		return nil, ErrorOn(fmt.Sprintf("Expected one of %v", tokens), tk)
 	})
 }

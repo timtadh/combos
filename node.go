@@ -14,6 +14,15 @@ type SourceLocation struct {
 	StartLine, StartColumn, EndLine, EndColumn int
 }
 
+func TokenLocation(tok *lex.Token) *SourceLocation {
+	return &SourceLocation{
+		StartLine: tok.StartLine,
+		StartColumn: tok.StartColumn,
+		EndLine: tok.EndLine,
+		EndColumn: tok.EndColumn,
+	}
+}
+
 func (n *SourceLocation) String() string {
 	return fmt.Sprintf("%d:%d-%d:%d",
 		n.StartLine, n.StartColumn, n.EndLine, n.EndColumn)
@@ -60,7 +69,8 @@ type Node struct {
 	location *SourceLocation
 }
 
-func (a *Node) equal(b *Node) bool {
+// Only checks for label equality of self and subtree rooted at self.
+func (a *Node) Equal(b *Node) bool {
 	if a.Label != b.Label {
 		return false
 	}
@@ -68,7 +78,7 @@ func (a *Node) equal(b *Node) bool {
 		return false
 	}
 	for i := 0; i < len(a.Children); i++ {
-		if !a.Get(i).equal(b.Get(i)) {
+		if !a.Get(i).Equal(b.Get(i)) {
 			return false
 		}
 	}
@@ -96,12 +106,14 @@ func NewTokenNode(g *Grammar, tok *lex.Token) *Node {
 		Label: g.Tokens[tok.Type],
 		Value: tok.Value,
 		Token: tok,
-		location: &SourceLocation{
-			StartLine: tok.StartLine,
-			StartColumn: tok.StartColumn,
-			EndLine: tok.EndLine,
-			EndColumn: tok.EndColumn,
-		},
+		location: TokenLocation(tok),
+	}
+}
+
+func (n *Node) Error(fmtString string, args ...interface{}) *ParseError {
+	return &ParseError{
+		Reason: fmt.Sprintf(fmtString, args...),
+		At: n.Location(),
 	}
 }
 
