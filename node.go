@@ -62,10 +62,10 @@ func (n *SourceLocation) Join(others ...*SourceLocation) *SourceLocation {
 }
 
 type Node struct {
-	Label    string
-	Value    interface{}
-	Token    *lex.Token
-	Children []*Node
+	Label    string // only required element. The name of this node
+	Value    interface{} // A user value associated with the node
+	Token    *lex.Token // A token associated with the node
+	Children []*Node // a list of child nodes.
 	location *SourceLocation
 }
 
@@ -85,6 +85,7 @@ func (a *Node) Equal(b *Node) bool {
 	return true
 }
 
+// Create a new node with just a label.
 func NewNode(label string) *Node {
 	return &Node{
 		Label:    label,
@@ -93,6 +94,7 @@ func NewNode(label string) *Node {
 	}
 }
 
+// Create a new node with a label and a value
 func NewValueNode(label string, value interface{}) *Node {
 	return &Node{
 		Label:    label,
@@ -101,6 +103,8 @@ func NewValueNode(label string, value interface{}) *Node {
 	}
 }
 
+// Create a new node from a Token. The label of the node will be the string
+// Token type, the value will be the Token.Value.
 func NewTokenNode(g *Grammar, tok *lex.Token) *Node {
 	return &Node{
 		Label: g.Tokens[tok.Type],
@@ -110,6 +114,7 @@ func NewTokenNode(g *Grammar, tok *lex.Token) *Node {
 	}
 }
 
+// Create a *ParseError at this Node's location.
 func (n *Node) Error(fmtString string, args ...interface{}) *ParseError {
 	return &ParseError{
 		Reason: fmt.Sprintf(fmtString, args...),
@@ -117,10 +122,26 @@ func (n *Node) Error(fmtString string, args ...interface{}) *ParseError {
 	}
 }
 
+// Is this a leaf node?
 func (n *Node) Leaf() bool {
 	return len(n.Children) == 0
 }
 
+// Add a child node. Allows declarative construction of a tree structure.
+//
+//   NewNode("A").
+//   	AddKid(NewNode("B").
+//   		AddKid(NewNode("C")).
+//   		AddKid(NewNode("D")).
+//   	).
+//   	AddKid(NewNode("E"))
+//
+//          A
+//         / \
+//        B   E
+//       / \
+//      C   D
+//
 func (n *Node) AddKid(kid *Node) *Node {
 	if kid != nil {
 		n.Children = append(n.Children, kid)
@@ -131,6 +152,7 @@ func (n *Node) AddKid(kid *Node) *Node {
 	return n
 }
 
+// Prepend a child to the beginning of the Children list.
 func (n *Node) PrependKid(kid *Node) *Node {
 	kids := n.Children
 	n.Children = []*Node{kid}
@@ -138,6 +160,7 @@ func (n *Node) PrependKid(kid *Node) *Node {
 	return n
 }
 
+// Get a child by the label.
 func (n *Node) Kid(label string) *Node {
 	for _, kid := range n.Children {
 		if kid.Label == label {
@@ -147,6 +170,8 @@ func (n *Node) Kid(label string) *Node {
 	return nil
 }
 
+// Get a child by its index in the Children list. Supports negative indexing
+// (eg. n.Get(-1) will give you the last child in the list).
 func (n *Node) Get(idx int) *Node {
 	if idx < 0 {
 		idx = len(n.Children) + idx
@@ -154,6 +179,7 @@ func (n *Node) Get(idx int) *Node {
 	return n.Children[idx]
 }
 
+// Pretty print as a sort of S-Expr which includes value and location information.
 func (n *Node) String() string {
 	kids := make([]string, 0, len(n.Children))
 	for _, kid := range n.Children {
@@ -175,10 +201,13 @@ func (n *Node) String() string {
 	}
 }
 
+// Set (or reset) the source location.
 func (n *Node) SetLocation(sl *SourceLocation) {
 	n.location = sl
 }
 
+// Get the source location. This may be computed from the tokens spanned in its
+// subtree.
 func (n *Node) Location() *SourceLocation {
 	if n == nil {
 		return nil
@@ -204,6 +233,7 @@ func (n *Node) Location() *SourceLocation {
 	return n.location
 }
 
+// Serialize in pre-order format.
 func (n *Node) Serialize() string {
 	fmt_node := func(n *Node) string {
 		s := ""
