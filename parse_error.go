@@ -11,8 +11,8 @@ import (
 )
 
 type ParseError struct {
-	Reason string
-	At *SourceLocation
+	Reason  string
+	At      *SourceLocation
 	Chained []error
 }
 
@@ -41,10 +41,10 @@ func Error(s *lex.Scanner, fmtString string, args ...interface{}) *ParseError {
 	sline, scol := frontend.LineCol(s.Text, start)
 	eline, ecol := frontend.LineCol(s.Text, end)
 	loc := &SourceLocation{
-		StartLine: sline,
+		StartLine:   sline,
 		StartColumn: scol,
-		EndLine: eline,
-		EndColumn: ecol,
+		EndLine:     eline,
+		EndColumn:   ecol,
 	}
 	text := string(s.Text[start:end])
 	reason := fmt.Sprintf(fmtString, args...)

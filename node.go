@@ -9,17 +9,16 @@ import (
 	lex "github.com/timtadh/lexmachine"
 )
 
-
 type SourceLocation struct {
 	StartLine, StartColumn, EndLine, EndColumn int
 }
 
 func TokenLocation(tok *lex.Token) *SourceLocation {
 	return &SourceLocation{
-		StartLine: tok.StartLine,
+		StartLine:   tok.StartLine,
 		StartColumn: tok.StartColumn,
-		EndLine: tok.EndLine,
-		EndColumn: tok.EndColumn,
+		EndLine:     tok.EndLine,
+		EndColumn:   tok.EndColumn,
 	}
 }
 
@@ -56,16 +55,16 @@ func (n *SourceLocation) Join(others ...*SourceLocation) *SourceLocation {
 	}
 
 	return &SourceLocation{
-		StartLine:min_start_line, StartColumn:min_start_col,
-		EndLine:max_end_line, EndColumn:max_end_col,
+		StartLine: min_start_line, StartColumn: min_start_col,
+		EndLine: max_end_line, EndColumn: max_end_col,
 	}
 }
 
 type Node struct {
-	Label    string // only required element. The name of this node
+	Label    string      // only required element. The name of this node
 	Value    interface{} // A user value associated with the node
-	Token    *lex.Token // A token associated with the node
-	Children []*Node // a list of child nodes.
+	Token    *lex.Token  // A token associated with the node
+	Children []*Node     // a list of child nodes.
 	location *SourceLocation
 }
 
@@ -107,9 +106,9 @@ func NewValueNode(label string, value interface{}) *Node {
 // Token type, the value will be the Token.Value.
 func NewTokenNode(g *Grammar, tok *lex.Token) *Node {
 	return &Node{
-		Label: g.Tokens[tok.Type],
-		Value: tok.Value,
-		Token: tok,
+		Label:    g.Tokens[tok.Type],
+		Value:    tok.Value,
+		Token:    tok,
 		location: TokenLocation(tok),
 	}
 }
@@ -118,7 +117,7 @@ func NewTokenNode(g *Grammar, tok *lex.Token) *Node {
 func (n *Node) Error(fmtString string, args ...interface{}) *ParseError {
 	return &ParseError{
 		Reason: fmt.Sprintf(fmtString, args...),
-		At: n.Location(),
+		At:     n.Location(),
 	}
 }
 
@@ -303,4 +302,3 @@ func (n *Node) Serialize() string {
 	nodes := walk(n)
 	return strings.Join(nodes, "\n")
 }
-

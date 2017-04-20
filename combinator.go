@@ -21,7 +21,7 @@ func (self FnConsumer) Consume(p *Parser) (*Node, *ParseError) {
 }
 
 type LazyConsumer struct {
-	G *Grammar
+	G              *Grammar
 	ProductionName string
 }
 
@@ -45,25 +45,25 @@ func (l *LazyConsumer) Consume(p *Parser) (*Node, *ParseError) {
 }
 
 type Parser struct {
-	Ctx interface{} // User supplied ctx type passed into Concat Action functions. Optional.
-	G *Grammar // The Grammar driving the parsing
-	S *lex.Scanner // The Scanner giving the tokens to be parsed
-	LastError *ParseError // The last error
-	UserError *ParseError // The last error from a Action
+	Ctx       interface{}  // User supplied ctx type passed into Concat Action functions. Optional.
+	G         *Grammar     // The Grammar driving the parsing
+	S         *lex.Scanner // The Scanner giving the tokens to be parsed
+	LastError *ParseError  // The last error
+	UserError *ParseError  // The last error from a Action
 }
 
 type Grammar struct {
-	Tokens []string
-	TokenIds map[string]int
-	productions map[string]Consumer
+	Tokens          []string
+	TokenIds        map[string]int
+	productions     map[string]Consumer
 	startProduction string
-	Debug bool // Set this flag to print out debug information during parsing
+	Debug           bool // Set this flag to print out debug information during parsing
 }
 
 func NewGrammar(tokens []string, tokenIds map[string]int) *Grammar {
 	g := &Grammar{
-		Tokens: tokens,
-		TokenIds: tokenIds,
+		Tokens:      tokens,
+		TokenIds:    tokenIds,
 		productions: make(map[string]Consumer),
 	}
 	for _, token := range tokens {
@@ -77,8 +77,8 @@ func NewGrammar(tokens []string, tokenIds map[string]int) *Grammar {
 func (g *Grammar) Parse(s *lex.Scanner, parserCtx interface{}) (*Node, *ParseError) {
 	p := &Parser{
 		Ctx: parserCtx,
-		G: g,
-		S: s,
+		G:   g,
+		S:   s,
 	}
 	n, err := g.productions[g.startProduction].Consume(p)
 	if err != nil {
@@ -88,7 +88,7 @@ func (g *Grammar) Parse(s *lex.Scanner, parserCtx interface{}) (*Node, *ParseErr
 	if p.UserError != nil {
 		return nil, p.UserError
 	}
-	
+
 	t, serr, eof := s.Next()
 	if eof {
 		return n, nil
@@ -148,8 +148,8 @@ func (g *Grammar) Effect(consumers ...Consumer) func(do func(interface{}, ...*No
 
 func (g *Grammar) Memoize(c Consumer) Consumer {
 	type result struct {
-		n *Node
-		e *ParseError
+		n  *Node
+		e  *ParseError
 		tc int
 	}
 	var s *lex.Scanner
